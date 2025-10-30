@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>声音特质评分任务</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+       .trial {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+       .trial.active {
+            display: block;
+        }
+       .trial-item {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+       .trial-item.active {
+            display: block;
+        }
+       .question-block {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+       .question {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+       .btn {
+            background-color: #ddd;
+            color: black;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 1em;
+        }
+       .btn.active {
+            background-color: #45a049;
+            color: white;
+        }
+       .btn:hover {
+            background-color: #aaa;
+        }
+       .btn.active:hover {
+            background-color: #45a049;
+            color: white;
+        }
+       .slider-group {
+            margin: 20px 0;
+        }
+       .radio-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 0.9em;
+            flex-wrap: wrap;
+        }
+       .radio-group label {
+            margin: 0 5px;
+            display: flex;
+            align-items: center;
+        }
+       .radio-group input {
+            margin-right: 5px;
+        }
+       .radio-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ccc;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+       .radio-option.selected {
+            border-color: #2196F3;
+            background-color: rgba(33, 150, 243, 0.1);
+        }
+        form p {
+            margin: 15px 0;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            box-sizing: border-box;
+        }
+       .audio-container {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9f7ef;
+            border-radius: 8px;
+            text-align: center;
+        }
+       .trial-navigation {
+            margin: 40px 0;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+       .input-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+       .error-message {
+            color: #ff0000;
+            margin: 10px 0;
+            display: none;
+        }
+       .mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-size: 1.2em;
+        }
+       .play-count {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+       .dimension-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- 初始页面 -->
+    <div id="intro" class="trial active">
+        <h2>声音特质评分任务</h2>
+        <p>欢迎参与本任务，请输入您的姓名和被试编号，并点击"开始任务"。</p>
+        <div class="error-message" id="info-error">请输入姓名和编号</div>
+        <div class="input-section">
+            <p><label for="participant_name">姓名：</label><input type="text" id="participant_name"></p>
+            <p><label for="participant_id">编号：</label><input type="text" id="participant_id"></p>
+        </div>
+        <div class="trial-navigation">
+            <button class="btn" onclick="startExperiment()">开始任务</button>
+        </div>
+    </div>
+
+    <!-- 实验说明页面 -->
+    <div id="welcome" class="trial">
+        <h2>任务说明</h2>
+        <p>在任务中，您将听到一系列音频。<i>请忽略音频的具体内容或含义</i>，仅根据您对人声的主观感受，对以下维度进行评分（1–7分）：</p>
+        <ul style="line-height: 3;">
+            <li><strong>吸引力 (Attractiveness)</strong>：声音听起来有多吸引人（1=非常不吸引，7=非常吸引）</li>
+            <li><strong>支配度 (Dominance)</strong>：声音听起来有多强势、有主导感（1=非常被动，7=非常强势）</li>
+            <li><strong>可信度 (Trustworthiness)</strong>：声音听起来有多可信（1=非常不可信，7=非常可信）</li>
+            <li><strong>友好度 (Friendliness)</strong>：声音听起来有多友好（1=非常不友好，7=非常友好）</li>
+        </ul>
+        <br>
+        <p><strong>重要提示</strong></p>
+        <ul>
+            <li>每个音频将自动播放一次，必须听完音频后才能开始答题</li>
+            <li>每个音频您最多可以再播放一次</li>
+            <li>请根据第一印象作答，无需过度思考</li>
+        </ul>        
+        <div class="trial-navigation">
+            <button class="btn" onclick="initTrials()">进入任务</button>
+        </div>
+    </div>
+
+    <!-- 结束页面 -->
+    <div id="finish" class="trial">
+        <h2>任务结束</h2>
+        <div style="text-align: center; margin: 30px 0;">
+            <div style="font-size: 2em; margin-bottom: 20px;">🎉</div>
+            <p style="font-size: 1.2em; color: #4CAF50; font-weight: bold;">您已完成所有试次，感谢您的参与！</p>
+        </div>
+        <p>点击下方按钮下载您的回答数据（CSV格式）：</p>
+        <div class="trial-navigation">
+            <button class="btn" onclick="downloadCSV()">下载任务数据</button>
+        </div>
+        <div id="results" style="margin-top: 30px;"></div>
+    </div>
+
+    <script>
+        const config = {
+            audioFiles: [
+                "audio/f01_hum001_2.wav",
+                "audio/f01_hum002_1.wav",
+                "audio/f01_hum004_1.wav",
+                "audio/f01_hum005_1.wav",
+                "audio/f01_hum006_1.wav",
+                "audio/f01_hum009_2.wav",
+                "audio/f01_hum010_1.wav",
+                "audio/f01_hum011_2.wav",
+                "audio/f01_hum013_2.wav",
+                "audio/f01_hum014_1.wav",
+                "audio/f01_hum015_2.wav",
+                "audio/f01_hum017_1.wav",
+                "audio/f01_hum018_1.wav",
+                "audio/f01_hum019_2.wav",
+                "audio/f01_hum021_2.wav",
+                "audio/f01_hum022_2.wav",
+                "audio/f01_hum025_2.wav",
+                "audio/f01_hum029_1.wav",
+                "audio/f01_hum030_2.wav",
+                "audio/f01_hum033_1.wav",
+                "audio/f01_hum034_2.wav",
+                "audio/f01_hum035_1.wav",
+                "audio/f01_hum036_2.wav",
+                "audio/f01_hum037_2.wav",
+                "audio/f01_hum039_1.wav",
+                "audio/f01_hum041_1.wav",
+                "audio/f01_hum042_1.wav",
+                "audio/f01_hum044_1.wav",
+                "audio/f01_hum045_1.wav",
+                "audio/f01_hum046_1.wav",
+                "audio/f01_hum047_1.wav",
+                "audio/f01_hum049_2.wav",
+                "audio/f01_hum050_1.wav",
+                "audio/f01_hum053_1.wav",
+                "audio/f01_hum054_1.wav",
+                "audio/f01_hum055_1.wav",
+                "audio/f01_hum059_2.wav",
+                "audio/f01_hum062_2.wav",
+                "audio/f01_hum063_1.wav",
+                "audio/f01_hum064_2.wav",
+                "audio/f01_sent004_2.wav",
+                "audio/f01_sent006_1.wav",
+                "audio/f01_sent007_1.wav",
+                "audio/f01_sent008_1.wav",
+                "audio/f01_sent009_2.wav",
+                "audio/f01_sent010_1.wav",
+                "audio/f01_sent012_1.wav",
+                "audio/f01_sent014_1.wav",
+                "audio/f01_sent020_2.wav",
+                "audio/f01_sent029_2.wav",
+                "audio/f01_sent040_2.wav",
+                "audio/f01_sent044_1.wav",
+                "audio/f01_sent052_1.wav",
+                "audio/f01_sent060_2.wav",
+                "audio/f01_sent064_2.wav",
+                "audio/f01_sent068_2.wav",
+                "audio/f01_sent073_1.wav",
+                "audio/f01_sent077_1.wav",
+                "audio/f01_sent079_2.wav",
+                "audio/f01_sent080_2.wav",
+                "audio/f01_sent081_1.wav",
+                "audio/f01_sent082_1.wav",
+                "audio/f01_sent083_2.wav",
+                "audio/f01_sent084_1.wav",
+                "audio/f01_sent086_2.wav",
+                "audio/f01_sent087_1.wav",
+                "audio/f01_sent088_2.wav",
+                "audio/f01_sent093_1.wav",
+                "audio/f01_sent097_2.wav",
+                "audio/f01_sent099_1.wav",
+                "audio/f01_sent101_1.wav",
+                "audio/f01_sent107_1.wav",
+                "audio/f01_sent108_2.wav",
+                "audio/f01_sent110_1.wav",
+                "audio/f01_sent112_2.wav",
+                "audio/f01_sent115_1.wav",
+                "audio/f01_sent119_2.wav",
+                "audio/f01_sent120_2.wav",
+                "audio/f01_sent123_1.wav",
+                "audio/f01_sent125_1.wav",
+                "audio/f01_voc001_2.wav",
+                "audio/f01_voc001_4.wav",
+                "audio/f01_voc001_5.wav",
+                "audio/f01_voc001_6.wav",
+                "audio/f01_voc002_1.wav",
+                "audio/f01_voc002_2.wav",
+                "audio/f01_voc002_3.wav",
+                "audio/f01_voc002_4.wav",
+                "audio/f01_voc002_5.wav",
+                "audio/f01_voc003_1.wav",
+                "audio/f01_voc003_3.wav",
+                "audio/f01_voc003_4.wav",
+                "audio/f01_voc003_5.wav",
+                "audio/f01_voc004_3.wav",
+                "audio/f01_voc004_4.wav",
+                "audio/f01_voc004_5.wav",
+                "audio/f01_voc004_6.wav",
+                "audio/f01_voc005_1.wav",
+                "audio/f01_voc005_3.wav",
+                "audio/f01_voc005_5.wav",
+                "audio/f01_voc005_6.wav",
+                "audio/f01_voc006_1.wav",
+                "audio/f01_voc006_2.wav",
+                "audio/f01_voc006_4.wav",
+                "audio/f01_voc006_6.wav",
+                "audio/f01_voc007_1.wav",
+                "audio/f01_voc007_3.wav",
+                "audio/f01_voc007_4.wav",
+                "audio/f01_voc007_5.wav",
+                "audio/f01_voc007_6.wav",
+                "audio/f01_voc008_2.wav",
+                "audio/f01_voc008_4.wav",
+                "audio/f01_voc008_5.wav",
+                "audio/f01_voc008_6.wav",
+                "audio/f01_voc009_4.wav",
+                "audio/f01_voc009_6.wav",
+                "audio/f01_voc010_1.wav",
+                "audio/f01_voc010_3.wav",
+                "audio/f01_voc010_4.wav",
+                "audio/f01_voc010_6.wav",
+                "audio/f01_word001_2.wav",
+                "audio/f01_word002_2.wav",
+                "audio/f01_word005_2.wav",
+                "audio/f01_word006_2.wav",
+                "audio/f01_word007_1.wav",
+                "audio/f01_word009_1.wav",
+                "audio/f01_word011_2.wav",
+                "audio/f01_word012_1.wav",
+                "audio/f01_word014_1.wav",
+                "audio/f01_word018_2.wav",
+                "audio/f01_word019_1.wav",
+                "audio/f01_word020_2.wav",
+                "audio/f01_word021_2.wav",
+                "audio/f01_word025_2.wav",
+                "audio/f01_word027_2.wav",
+                "audio/f01_word030_1.wav",
+                "audio/f01_word031_1.wav",
+                "audio/f01_word034_2.wav",
+                "audio/f01_word036_1.wav",
+                "audio/f01_word037_2.wav",
+                "audio/f01_word039_1.wav",
+                "audio/f01_word040_1.wav",
+                "audio/f01_word041_1.wav",
+                "audio/f01_word043_2.wav",
+                "audio/f01_word044_1.wav",
+                "audio/f01_word047_1.wav",
+                "audio/f01_word048_2.wav",
+                "audio/f01_word049_1.wav",
+                "audio/f01_word051_2.wav",
+                "audio/f01_word052_1.wav",
+                "audio/f01_word053_1.wav",
+                "audio/f01_word054_2.wav",
+                "audio/f01_word056_2.wav",
+                "audio/f01_word057_2.wav",
+                "audio/f01_word059_1.wav",
+                "audio/f01_word060_2.wav",
+                "audio/f01_word061_1.wav",
+                "audio/f01_word062_2.wav",
+                "audio/f01_word063_2.wav",
+                "audio/f01_word064_2.wav",
+                "audio/f02_hum001_2.wav",
+                "audio/f02_hum002_1.wav",
+                "audio/f02_hum004_2.wav",
+                "audio/f02_hum005_2.wav",
+                "audio/f02_hum006_1.wav",
+                "audio/f02_hum009_2.wav",
+                "audio/f02_hum010_1.wav",
+                "audio/f02_hum011_2.wav",
+                "audio/f02_hum013_2.wav",
+                "audio/f02_hum014_2.wav",
+                "audio/f02_hum015_2.wav",
+                "audio/f02_hum017_2.wav",
+                "audio/f02_hum018_1.wav",
+                "audio/f02_hum019_1.wav",
+                "audio/f02_hum021_2.wav",
+                "audio/f02_hum022_2.wav",
+                "audio/f02_hum025_1.wav",
+                "audio/f02_hum029_1.wav",
+                "audio/f02_hum030_2.wav",
+                "audio/f02_hum033_1.wav",
+                "audio/f02_hum034_2.wav",
+                "audio/f02_hum035_1.wav",
+                "audio/f02_hum036_2.wav",
+                "audio/f02_hum037_2.wav",
+                "audio/f02_hum039_2.wav",
+                "audio/f02_hum041_1.wav",
+                "audio/f02_hum042_2.wav",
+                "audio/f02_hum044_1.wav",
+                "audio/f02_hum045_2.wav",
+                "audio/f02_hum046_1.wav",
+                "audio/f02_hum047_1.wav",
+                "audio/f02_hum049_2.wav",
+                "audio/f02_hum050_2.wav",
+                "audio/f02_hum053_1.wav",
+                "audio/f02_hum054_1.wav",
+                "audio/f02_hum055_2.wav",
+                "audio/f02_hum059_1.wav",
+                "audio/f02_hum062_2.wav",
+                "audio/f02_hum063_1.wav",
+                "audio/f02_hum064_1.wav",
+                "audio/f02_sent004_1.wav",
+                "audio/f02_sent006_2.wav",
+                "audio/f02_sent007_1.wav",
+                "audio/f02_sent008_2.wav",
+                "audio/f02_sent009_1.wav",
+                "audio/f02_sent010_1.wav",
+                "audio/f02_sent012_2.wav",
+                "audio/f02_sent014_1.wav",
+                "audio/f02_sent020_2.wav",
+                "audio/f02_sent029_2.wav",
+                "audio/f02_sent040_2.wav",
+                "audio/f02_sent044_2.wav",
+                "audio/f02_sent052_1.wav",
+                "audio/f02_sent060_1.wav",
+                "audio/f02_sent064_2.wav",
+                "audio/f02_sent068_1.wav",
+                "audio/f02_sent073_2.wav",
+                "audio/f02_sent077_1.wav",
+                "audio/f02_sent079_2.wav",
+                "audio/f02_sent080_2.wav",
+                "audio/f02_sent081_1.wav",
+                "audio/f02_sent082_1.wav",
+                "audio/f02_sent083_2.wav",
+                "audio/f02_sent084_1.wav",
+                "audio/f02_sent086_1.wav",
+                "audio/f02_sent087_1.wav",
+                "audio/f02_sent088_2.wav",
+                "audio/f02_sent093_2.wav",
+                "audio/f02_sent097_1.wav",
+                "audio/f02_sent099_2.wav",
+                "audio/f02_sent101_1.wav",
+                "audio/f02_sent107_2.wav",
+                "audio/f02_sent108_1.wav",
+                "audio/f02_sent110_1.wav",
+                "audio/f02_sent112_2.wav",
+                "audio/f02_sent115_1.wav",
+                "audio/f02_sent119_2.wav",
+                "audio/f02_sent120_2.wav",
+                "audio/f02_sent123_1.wav",
+                "audio/f02_sent125_1.wav",
+                "audio/f02_voc001_2.wav",
+                "audio/f02_voc001_3.wav",
+                "audio/f02_voc001_5.wav",
+                "audio/f02_voc001_6.wav",
+                "audio/f02_voc002_1.wav",
+                "audio/f02_voc002_2.wav",
+                "audio/f02_voc002_4.wav",
+                "audio/f02_voc002_5.wav",
+                "audio/f02_voc002_6.wav",
+                "audio/f02_voc003_1.wav",
+                "audio/f02_voc003_2.wav",
+                "audio/f02_voc003_3.wav",
+                "audio/f02_voc003_5.wav",
+                "audio/f02_voc004_1.wav",
+                "audio/f02_voc004_3.wav",
+                "audio/f02_voc004_5.wav",
+                "audio/f02_voc004_6.wav",
+                "audio/f02_voc005_1.wav",
+                "audio/f02_voc005_3.wav",
+                "audio/f02_voc005_5.wav",
+                "audio/f02_voc005_6.wav",
+                "audio/f02_voc006_2.wav",
+                "audio/f02_voc006_3.wav",
+                "audio/f02_voc006_4.wav",
+                "audio/f02_voc006_6.wav",
+                "audio/f02_voc007_1.wav",
+                "audio/f02_voc007_2.wav",
+                "audio/f02_voc007_3.wav",
+                "audio/f02_voc007_4.wav",
+                "audio/f02_voc007_5.wav",
+                "audio/f02_voc008_2.wav",
+                "audio/f02_voc008_3.wav",
+                "audio/f02_voc008_4.wav",
+                "audio/f02_voc008_5.wav",
+                "audio/f02_voc009_2.wav",
+                "audio/f02_voc009_4.wav",
+                "audio/f02_voc010_2.wav",
+                "audio/f02_voc010_3.wav",
+                "audio/f02_voc010_4.wav",
+                "audio/f02_voc010_5.wav",
+                "audio/f02_word001_2.wav",
+                "audio/f02_word002_1.wav",
+                "audio/f02_word005_1.wav",
+                "audio/f02_word006_1.wav",
+                "audio/f02_word007_1.wav",
+                "audio/f02_word009_2.wav",
+                "audio/f02_word011_1.wav",
+                "audio/f02_word012_1.wav",
+                "audio/f02_word014_1.wav",
+                "audio/f02_word018_2.wav",
+                "audio/f02_word019_1.wav",
+                "audio/f02_word020_2.wav",
+                "audio/f02_word021_2.wav",
+                "audio/f02_word025_1.wav",
+                "audio/f02_word027_2.wav",
+                "audio/f02_word030_1.wav",
+                "audio/f02_word031_1.wav",
+                "audio/f02_word034_1.wav",
+                "audio/f02_word036_2.wav",
+                "audio/f02_word037_1.wav",
+                "audio/f02_word039_2.wav",
+                "audio/f02_word040_2.wav",
+                "audio/f02_word041_2.wav",
+                "audio/f02_word043_1.wav",
+                "audio/f02_word044_2.wav",
+                "audio/f02_word047_1.wav",
+                "audio/f02_word048_1.wav",
+                "audio/f02_word049_1.wav",
+                "audio/f02_word051_2.wav",
+                "audio/f02_word052_2.wav",
+                "audio/f02_word053_2.wav",
+                "audio/f02_word054_2.wav",
+                "audio/f02_word056_1.wav",
+                "audio/f02_word057_2.wav",
+                "audio/f02_word059_1.wav",
+                "audio/f02_word060_2.wav",
+                "audio/f02_word061_1.wav",
+                "audio/f02_word062_1.wav",
+                "audio/f02_word063_2.wav",
+                "audio/f02_word064_2.wav",
+                "audio/m01_hum001_1.wav",
+                "audio/m01_hum002_2.wav",
+                "audio/m01_hum004_1.wav",
+                "audio/m01_hum005_1.wav",
+                "audio/m01_hum006_1.wav",
+                "audio/m01_hum009_2.wav",
+                "audio/m01_hum010_2.wav",
+                "audio/m01_hum011_1.wav",
+                "audio/m01_hum013_1.wav",
+                "audio/m01_hum014_1.wav",
+                "audio/m01_hum015_2.wav",
+                "audio/m01_hum017_1.wav",
+                "audio/m01_hum018_1.wav",
+                "audio/m01_hum019_1.wav",
+                "audio/m01_hum021_2.wav",
+                "audio/m01_hum022_2.wav",
+                "audio/m01_hum025_2.wav",
+                "audio/m01_hum029_1.wav",
+                "audio/m01_hum030_1.wav",
+                "audio/m01_hum033_1.wav",
+                "audio/m01_hum034_2.wav",
+                "audio/m01_hum035_2.wav",
+                "audio/m01_hum036_2.wav",
+                "audio/m01_hum037_2.wav",
+                "audio/m01_hum039_1.wav",
+                "audio/m01_hum041_1.wav",
+                "audio/m01_hum042_2.wav",
+                "audio/m01_hum044_2.wav",
+                "audio/m01_hum045_1.wav",
+                "audio/m01_hum046_1.wav",
+                "audio/m01_hum047_1.wav",
+                "audio/m01_hum049_1.wav",
+                "audio/m01_hum050_2.wav",
+                "audio/m01_hum053_1.wav",
+                "audio/m01_hum054_1.wav",
+                "audio/m01_hum055_1.wav",
+                "audio/m01_hum059_1.wav",
+                "audio/m01_hum062_1.wav",
+                "audio/m01_hum063_1.wav",
+                "audio/m01_hum064_1.wav",
+                "audio/m01_sent004_1.wav",
+                "audio/m01_sent006_2.wav",
+                "audio/m01_sent007_1.wav",
+                "audio/m01_sent008_2.wav",
+                "audio/m01_sent009_1.wav",
+                "audio/m01_sent010_2.wav",
+                "audio/m01_sent012_1.wav",
+                "audio/m01_sent014_1.wav",
+                "audio/m01_sent020_2.wav",
+                "audio/m01_sent029_1.wav",
+                "audio/m01_sent040_2.wav",
+                "audio/m01_sent044_1.wav",
+                "audio/m01_sent052_1.wav",
+                "audio/m01_sent060_1.wav",
+                "audio/m01_sent064_2.wav",
+                "audio/m01_sent068_1.wav",
+                "audio/m01_sent073_2.wav",
+                "audio/m01_sent077_1.wav",
+                "audio/m01_sent079_1.wav",
+                "audio/m01_sent080_1.wav",
+                "audio/m01_sent081_1.wav",
+                "audio/m01_sent082_2.wav",
+                "audio/m01_sent083_2.wav",
+                "audio/m01_sent084_1.wav",
+                "audio/m01_sent086_1.wav",
+                "audio/m01_sent087_2.wav",
+                "audio/m01_sent088_2.wav",
+                "audio/m01_sent093_1.wav",
+                "audio/m01_sent097_2.wav",
+                "audio/m01_sent099_1.wav",
+                "audio/m01_sent101_2.wav",
+                "audio/m01_sent107_1.wav",
+                "audio/m01_sent108_2.wav",
+                "audio/m01_sent110_2.wav",
+                "audio/m01_sent112_1.wav",
+                "audio/m01_sent115_2.wav",
+                "audio/m01_sent119_2.wav",
+                "audio/m01_sent120_1.wav",
+                "audio/m01_sent123_2.wav",
+                "audio/m01_sent125_1.wav",
+                "audio/m01_voc001_2.wav",
+                "audio/m01_voc001_3.wav",
+                "audio/m01_voc001_4.wav",
+                "audio/m01_voc001_6.wav",
+                "audio/m01_voc002_1.wav",
+                "audio/m01_voc002_2.wav",
+                "audio/m01_voc002_4.wav",
+                "audio/m01_voc002_5.wav",
+                "audio/m01_voc002_6.wav",
+                "audio/m01_voc003_2.wav",
+                "audio/m01_voc003_3.wav",
+                "audio/m01_voc003_4.wav",
+                "audio/m01_voc003_6.wav",
+                "audio/m01_voc004_1.wav",
+                "audio/m01_voc004_2.wav",
+                "audio/m01_voc004_3.wav",
+                "audio/m01_voc004_4.wav",
+                "audio/m01_voc005_2.wav",
+                "audio/m01_voc005_4.wav",
+                "audio/m01_voc005_5.wav",
+                "audio/m01_voc005_6.wav",
+                "audio/m01_voc006_2.wav",
+                "audio/m01_voc006_3.wav",
+                "audio/m01_voc006_4.wav",
+                "audio/m01_voc006_6.wav",
+                "audio/m01_voc007_1.wav",
+                "audio/m01_voc007_2.wav",
+                "audio/m01_voc007_3.wav",
+                "audio/m01_voc007_4.wav",
+                "audio/m01_voc007_6.wav",
+                "audio/m01_voc008_1.wav",
+                "audio/m01_voc008_3.wav",
+                "audio/m01_voc008_5.wav",
+                "audio/m01_voc008_6.wav",
+                "audio/m01_voc009_2.wav",
+                "audio/m01_voc009_6.wav",
+                "audio/m01_voc010_3.wav",
+                "audio/m01_voc010_4.wav",
+                "audio/m01_voc010_5.wav",
+                "audio/m01_voc010_6.wav",
+                "audio/m01_word001_1.wav",
+                "audio/m01_word002_2.wav",
+                "audio/m01_word005_2.wav",
+                "audio/m01_word006_2.wav",
+                "audio/m01_word007_1.wav",
+                "audio/m01_word009_2.wav",
+                "audio/m01_word011_1.wav",
+                "audio/m01_word012_2.wav",
+                "audio/m01_word014_1.wav",
+                "audio/m01_word018_1.wav",
+                "audio/m01_word019_1.wav",
+                "audio/m01_word020_1.wav",
+                "audio/m01_word021_1.wav",
+                "audio/m01_word025_1.wav",
+                "audio/m01_word027_1.wav",
+                "audio/m01_word030_1.wav",
+                "audio/m01_word031_2.wav",
+                "audio/m01_word034_2.wav",
+                "audio/m01_word036_1.wav",
+                "audio/m01_word037_1.wav",
+                "audio/m01_word039_1.wav",
+                "audio/m01_word040_2.wav",
+                "audio/m01_word041_1.wav",
+                "audio/m01_word043_2.wav",
+                "audio/m01_word044_2.wav",
+                "audio/m01_word047_2.wav",
+                "audio/m01_word048_1.wav",
+                "audio/m01_word049_2.wav",
+                "audio/m01_word051_1.wav",
+                "audio/m01_word052_2.wav",
+                "audio/m01_word053_1.wav",
+                "audio/m01_word054_1.wav",
+                "audio/m01_word056_1.wav",
+                "audio/m01_word057_2.wav",
+                "audio/m01_word059_2.wav",
+                "audio/m01_word060_2.wav",
+                "audio/m01_word061_1.wav",
+                "audio/m01_word062_2.wav",
+                "audio/m01_word063_1.wav",
+                "audio/m01_word064_1.wav",
+                "audio/m02_hum001_2.wav",
+                "audio/m02_hum002_1.wav",
+                "audio/m02_hum004_2.wav",
+                "audio/m02_hum005_2.wav",
+                "audio/m02_hum006_2.wav",
+                "audio/m02_hum009_2.wav",
+                "audio/m02_hum010_1.wav",
+                "audio/m02_hum011_2.wav",
+                "audio/m02_hum013_2.wav",
+                "audio/m02_hum014_2.wav",
+                "audio/m02_hum015_2.wav",
+                "audio/m02_hum017_1.wav",
+                "audio/m02_hum018_1.wav",
+                "audio/m02_hum019_2.wav",
+                "audio/m02_hum021_2.wav",
+                "audio/m02_hum022_2.wav",
+                "audio/m02_hum025_1.wav",
+                "audio/m02_hum029_2.wav",
+                "audio/m02_hum030_1.wav",
+                "audio/m02_hum033_1.wav",
+                "audio/m02_hum034_1.wav",
+                "audio/m02_hum035_2.wav",
+                "audio/m02_hum036_2.wav",
+                "audio/m02_hum037_2.wav",
+                "audio/m02_hum039_2.wav",
+                "audio/m02_hum041_2.wav",
+                "audio/m02_hum042_2.wav",
+                "audio/m02_hum044_2.wav",
+                "audio/m02_hum045_1.wav",
+                "audio/m02_hum046_1.wav",
+                "audio/m02_hum047_2.wav",
+                "audio/m02_hum049_2.wav",
+                "audio/m02_hum050_1.wav",
+                "audio/m02_hum053_1.wav",
+                "audio/m02_hum054_1.wav",
+                "audio/m02_hum055_2.wav",
+                "audio/m02_hum059_1.wav",
+                "audio/m02_hum062_2.wav",
+                "audio/m02_hum063_1.wav",
+                "audio/m02_hum064_2.wav",
+                "audio/m02_sent004_1.wav",
+                "audio/m02_sent006_2.wav",
+                "audio/m02_sent007_2.wav",
+                "audio/m02_sent008_1.wav",
+                "audio/m02_sent009_1.wav",
+                "audio/m02_sent010_2.wav",
+                "audio/m02_sent012_1.wav",
+                "audio/m02_sent014_1.wav",
+                "audio/m02_sent020_2.wav",
+                "audio/m02_sent029_1.wav",
+                "audio/m02_sent040_1.wav",
+                "audio/m02_sent044_2.wav",
+                "audio/m02_sent052_2.wav",
+                "audio/m02_sent060_2.wav",
+                "audio/m02_sent064_2.wav",
+                "audio/m02_sent068_1.wav",
+                "audio/m02_sent073_1.wav",
+                "audio/m02_sent077_2.wav",
+                "audio/m02_sent079_1.wav",
+                "audio/m02_sent080_1.wav",
+                "audio/m02_sent081_2.wav",
+                "audio/m02_sent082_2.wav",
+                "audio/m02_sent083_2.wav",
+                "audio/m02_sent084_1.wav",
+                "audio/m02_sent086_2.wav",
+                "audio/m02_sent087_1.wav",
+                "audio/m02_sent088_2.wav",
+                "audio/m02_sent093_1.wav",
+                "audio/m02_sent097_2.wav",
+                "audio/m02_sent099_2.wav",
+                "audio/m02_sent101_2.wav",
+                "audio/m02_sent107_1.wav",
+                "audio/m02_sent108_2.wav",
+                "audio/m02_sent110_2.wav",
+                "audio/m02_sent112_1.wav",
+                "audio/m02_sent115_2.wav",
+                "audio/m02_sent119_2.wav",
+                "audio/m02_sent120_2.wav",
+                "audio/m02_sent123_1.wav",
+                "audio/m02_sent125_2.wav",
+                "audio/m02_voc001_2.wav",
+                "audio/m02_voc001_3.wav",
+                "audio/m02_voc001_4.wav",
+                "audio/m02_voc001_6.wav",
+                "audio/m02_voc002_1.wav",
+                "audio/m02_voc002_2.wav",
+                "audio/m02_voc002_3.wav",
+                "audio/m02_voc002_4.wav",
+                "audio/m02_voc002_6.wav",
+                "audio/m02_voc003_2.wav",
+                "audio/m02_voc003_3.wav",
+                "audio/m02_voc003_4.wav",
+                "audio/m02_voc003_6.wav",
+                "audio/m02_voc004_2.wav",
+                "audio/m02_voc004_3.wav",
+                "audio/m02_voc004_4.wav",
+                "audio/m02_voc004_5.wav",
+                "audio/m02_voc005_1.wav",
+                "audio/m02_voc005_2.wav",
+                "audio/m02_voc005_4.wav",
+                "audio/m02_voc005_6.wav",
+                "audio/m02_voc006_2.wav",
+                "audio/m02_voc006_3.wav",
+                "audio/m02_voc006_5.wav",
+                "audio/m02_voc006_6.wav",
+                "audio/m02_voc007_1.wav",
+                "audio/m02_voc007_2.wav",
+                "audio/m02_voc007_3.wav",
+                "audio/m02_voc007_4.wav",
+                "audio/m02_voc007_6.wav",
+                "audio/m02_voc008_2.wav",
+                "audio/m02_voc008_3.wav",
+                "audio/m02_voc008_5.wav",
+                "audio/m02_voc008_6.wav",
+                "audio/m02_voc009_2.wav",
+                "audio/m02_voc009_3.wav",
+                "audio/m02_voc010_2.wav",
+                "audio/m02_voc010_3.wav",
+                "audio/m02_voc010_4.wav",
+                "audio/m02_voc010_6.wav",
+                "audio/m02_word001_1.wav",
+                "audio/m02_word002_2.wav",
+                "audio/m02_word005_2.wav",
+                "audio/m02_word006_1.wav",
+                "audio/m02_word007_1.wav",
+                "audio/m02_word009_1.wav",
+                "audio/m02_word011_2.wav",
+                "audio/m02_word012_2.wav",
+                "audio/m02_word014_2.wav",
+                "audio/m02_word018_1.wav",
+                "audio/m02_word019_2.wav",
+                "audio/m02_word020_2.wav",
+                "audio/m02_word021_1.wav",
+                "audio/m02_word025_2.wav",
+                "audio/m02_word027_1.wav",
+                "audio/m02_word030_2.wav",
+                "audio/m02_word031_1.wav",
+                "audio/m02_word034_2.wav",
+                "audio/m02_word036_2.wav",
+                "audio/m02_word037_1.wav",
+                "audio/m02_word039_1.wav",
+                "audio/m02_word040_2.wav",
+                "audio/m02_word041_1.wav",
+                "audio/m02_word043_1.wav",
+                "audio/m02_word044_1.wav",
+                "audio/m02_word047_1.wav",
+                "audio/m02_word048_1.wav",
+                "audio/m02_word049_1.wav",
+                "audio/m02_word051_2.wav",
+                "audio/m02_word052_2.wav",
+                "audio/m02_word053_1.wav",
+                "audio/m02_word054_2.wav",
+                "audio/m02_word056_2.wav",
+                "audio/m02_word057_1.wav",
+                "audio/m02_word059_1.wav",
+                "audio/m02_word060_1.wav",
+                "audio/m02_word061_2.wav",
+                "audio/m02_word062_1.wav",
+                "audio/m02_word063_2.wav",
+                "audio/m02_word064_2.wav"
+            ],
+            currentTrial: 0,
+            experimentData: [],
+            participantName: '',
+            participantId: '',
+            // 定义评分维度及完整问题
+            dimensions: [
+                { label: "吸引力", question: "声音听起来有多吸引人？" },
+                { label: "支配度", question: "声音听起来有多强势？" },
+                { label: "可信度", question: "声音听起来有多可信？" },
+                { label: "友好度", question: "声音听起来有多友好？" }
+            ]
+        };
+
+        // 创建评分选项组
+        function createRatingGroup(dimension) {
+            // 根据维度类型设置不同的标签
+            let leftLabel, rightLabel;
+            if (dimension.label === "支配度") {
+                leftLabel = "非常被动";
+                rightLabel = "非常强势";
+            } else {
+                const baseLabel = dimension.label.replace(/度|力/, '');
+                leftLabel = `非常不${baseLabel}`;
+                rightLabel = `非常${baseLabel}`;
+            }
+
+            let html = `
+                <div class="question">${dimension.question}</div>
+                <div class="radio-group" data-dimension="${dimension.label}">
+            `;
+            
+            // 创建1-7的评分选项
+            for (let i = 1; i <= 7; i++) {
+                html += `
+                    <label>
+                        <div class="radio-option" data-value="${i}">${i}</div>
+                        <input type="radio" name="${dimension.label}" value="${i}" style="display: none;">
+                    </label>
+                `;
+            }
+            
+            html += `
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8em; color: #666; margin-top: 5px;">
+                        <span>${leftLabel}</span>
+                        <span>${rightLabel}</span>
+                    </div>
+                </div>
+            `;
+            
+            return html;
+        }
+
+        // 创建问题块
+        function createQuestionBlock(content) {
+            const block = document.createElement('div');
+            block.className = 'question-block';
+            block.innerHTML = content;
+            return block;
+        }
+
+        // 动态创建试次
+        function createTrials(index) {
+            // 清除已有试次
+            document.querySelectorAll('[id^="trial-"]').forEach(el => el.remove());
+            
+            // 创建试次容器
+            const trial = document.createElement('div');
+            trial.id = 'trial-' + index;
+            trial.className = 'trial-item';
+            trial.dataset.trialIndex = index;
+            trial.dataset.playCount = 0;
+            
+            // 获取当前音频文件
+            const file = config.audioFiles[index];
+            
+            // 试次标题
+            const title = document.createElement('h2');
+            title.innerHTML = '试次 <span class="trial-number">' + (index + 1) + '</span>/<span class="total-trials">' + config.audioFiles.length + '</span>';
+            trial.appendChild(title);
+            
+            // 音频容器 - 移除默认控件，只保留播放按钮
+            const audioContainer = document.createElement('div');
+            audioContainer.className = 'audio-container';
+            audioContainer.innerHTML = `
+                <p><strong>请聆听以下音频：</strong></p>
+                <!-- 隐藏原生音频控件 -->
+                <audio class="experiment-audio" style="display: none;">您的浏览器不支持音频播放</audio>
+                <button class="btn play-btn" style="padding: 12px 24px; font-size: 1.1em;">播放音频</button>
+                <p class="audio-status">请点击播放按钮聆听音频</p>
+                <p class="play-count">已播放: 0/2 次</p>
+            `;
+            trial.appendChild(audioContainer);
+            const audioElement = audioContainer.querySelector('audio');
+            audioElement.src = file;
+            audioElement.dataset.filename = file.split('/').pop();
+            audioElement.onended = audioEnded;
+            
+            // 添加评分维度问题块
+            config.dimensions.forEach(dimension => {
+                const ratingHtml = createRatingGroup(dimension);
+                const questionBlock = createQuestionBlock(ratingHtml);
+                trial.appendChild(questionBlock);
+            });
+            
+            // 下一试次按钮（默认禁用）
+            const nav = document.createElement('div');
+            nav.className = 'trial-navigation';
+            nav.innerHTML = '<button class="btn next-trial-btn" disabled>下一试次</button>';
+            trial.appendChild(nav);
+            
+            // 添加事件监听
+            attachEventListeners(trial);
+            
+            // 添加到容器
+            const trialContainer = document.createElement('div');
+            trialContainer.id = 'trial-container';
+            document.body.appendChild(trialContainer);
+            trialContainer.appendChild(trial);
+            
+            return trial;
+        }
+
+        // 绑定事件监听
+        function attachEventListeners(trial) {
+            // 播放按钮
+            const playBtn = trial.querySelector('.play-btn');
+            const audioElement = trial.querySelector('audio');
+            const audioStatus = trial.querySelector('.audio-status');
+            const playCountEl = trial.querySelector('.play-count');
+            
+            playBtn.addEventListener('click', function() {
+                const playCount = parseInt(trial.dataset.playCount) || 0;
+                
+                if (playCount < 2) {
+                    // 播放音频
+                    audioElement.load();
+                    const playPromise = audioElement.play();
+                    
+                    if (playPromise!== undefined) {
+                        playPromise.then(() => {
+                            trial.dataset.playCount = (playCount + 1).toString();
+                            playCountEl.textContent = `已播放: ${trial.dataset.playCount}/2 次`;
+                            audioStatus.textContent = '正在播放音频...';
+                            playBtn.disabled = true;
+                            
+                            // 创建遮罩层防止操作
+                            createAudioMask(trial);
+                        }).catch(error => {
+                            console.error('播放失败:', error);
+                            audioStatus.textContent = '播放失败，请重试';
+                        });
+                    }
+                } else {
+                    audioStatus.textContent = '最多只能播放两次';
+                }
+            });
+
+            // 评分选项点击事件
+            trial.querySelectorAll('.radio-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    // 检查音频是否已播放至少一次
+                    const playCount = parseInt(trial.dataset.playCount) || 0;
+                    if (playCount === 0) {
+                        alert('请先聆听音频后再进行评分');
+                        return;
+                    }
+                    
+                    // 清除同组其他选项的选中状态
+                    const radioGroup = this.closest('.radio-group');
+                    radioGroup.querySelectorAll('.radio-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // 设置当前选项为选中
+                    this.classList.add('selected');
+                    
+                    // 选中对应的radio输入
+                    const radioInput = this.nextElementSibling;
+                    radioInput.checked = true;
+                    
+                    // 更新数据属性
+                    const dimension = radioGroup.dataset.dimension;
+                    trial.dataset[dimension] = this.dataset.value;
+                    
+                    // 检查是否所有问题都已回答
+                    checkAllAnswered(trial);
+                });
+            });
+
+            // 下一试次按钮
+            trial.querySelector('.next-trial-btn').addEventListener('click', function() {
+                if (!validateTrialAnswers(trial)) {
+                    alert('请完成所有问题的回答后再提交');
+                    return;
+                }
+
+                const currentIndex = config.currentTrial;
+                config.currentTrial++;
+                saveTrialData(trial);
+
+                if (config.currentTrial < config.audioFiles.length) {
+                    showTrial(config.currentTrial);
+                } else {
+                    showFinish();
+                }
+            });
+        }
+
+        // 创建音频播放遮罩层
+        function createAudioMask(trial) {
+            // 先移除可能存在的遮罩
+            const existingMask = document.querySelector('.mask');
+            if (existingMask) existingMask.remove();
+            
+            const mask = document.createElement('div');
+            mask.className = 'mask';
+            mask.innerHTML = `
+                <p>正在播放音频，请聆听...</p>
+                <p>剩余时间: <span class="remaining-time">计算中...</span></p>
+            `;
+            document.body.appendChild(mask);
+            
+            const audioElement = trial.querySelector('audio');
+            const remainingTimeEl = mask.querySelector('.remaining-time');
+            
+            // 更新剩余时间
+            function updateRemainingTime() {
+                if (audioElement.duration) {
+                    const remaining = Math.ceil(audioElement.duration - audioElement.currentTime);
+                    remainingTimeEl.textContent = `${remaining} 秒`;
+                }
+            }
+            
+            const updateInterval = setInterval(updateRemainingTime, 1000);
+            
+            // 音频结束时移除遮罩
+            audioElement.addEventListener('ended', function() {
+                clearInterval(updateInterval);
+                if (mask.parentNode) {
+                    mask.parentNode.removeChild(mask);
+                }
+            }, { once: true });
+        }
+
+        // 检查是否所有问题都已回答
+        function checkAllAnswered(trial) {
+            if (validateTrialAnswers(trial)) {
+                trial.querySelector('.next-trial-btn').disabled = false;
+            } else {
+                trial.querySelector('.next-trial-btn').disabled = true;
+            }
+        }
+
+        // 显示试次
+        function showTrial(index) {
+            // 删除旧容器
+            const oldContainer = document.getElementById('trial-container');
+            if (oldContainer) oldContainer.remove();
+            
+            // 创建新试次
+            const trial = createTrials(index);
+            
+            // 显示试次
+            setTimeout(() => {
+                if (!trial) {
+                    alert('无法加载试次 ' + (index + 1) + '，请刷新页面');
+                    return;
+                }
+                trial.classList.add('active');
+                window.scrollTo(0, 0);
+
+                // 记录开始时间
+                const startTime = new Date().toISOString();
+                trial.dataset.startTime = startTime;
+                
+                // 自动播放音频（第一次）
+                setTimeout(() => {
+                    const playBtn = trial.querySelector('.play-btn');
+                    if (playBtn &&!playBtn.disabled) {
+                        playBtn.click(); // 模拟点击播放按钮
+                    }
+                }, 400); // 延迟400ms确保元素加载完成
+            }, 100);
+        }
+
+        // 开始实验
+        function startExperiment() {
+            const name = document.getElementById('participant_name').value.trim();
+            const id = document.getElementById('participant_id').value.trim();
+            
+            if (!name ||!id) {
+                document.getElementById('info-error').style.display = 'block';
+                return;
+            }
+            
+            config.participantName = name;
+            config.participantId = id;
+
+            const savedData = localStorage.getItem('experiment_' + id);
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                config.audioFiles = parsedData.audioOrder;
+                config.currentTrial = parsedData.currentTrial;
+                config.experimentData = parsedData.experimentData;
+
+                const userChoice = confirm(
+                    '检测到未完成数据（已完成 ' + parsedData.experimentData.length + '/' + config.audioFiles.length + ' 试次）\n' +
+                    '【确定】= 继续剩余试次 | 【取消】= 结束并下载已完成数据'
+                );
+
+                if (!userChoice) {
+                    document.getElementById('intro').classList.remove('active');
+                    showFinish();
+                    return;
+                }
+            }
+
+            document.getElementById('intro').classList.remove('active');
+            document.getElementById('welcome').classList.add('active');
+        }
+
+        // 初始化试次
+        function initTrials() {
+            const savedData = localStorage.getItem('experiment_' + config.participantId);
+
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                config.audioFiles = parsedData.audioOrder;
+            } else {
+                shuffleArray(config.audioFiles);
+            }
+            document.getElementById('welcome').classList.remove('active');
+            showTrial(config.currentTrial || 0);
+        }
+
+        // 洗牌算法
+        function shuffleArray(array) {
+            if (!Array.isArray(array)) {
+                console.error('shuffleArray需要传入数组');
+                return array;
+            }
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 音频播放结束
+        function audioEnded() {
+            const activeTrial = document.querySelector('.trial-item.active');
+            if (activeTrial) {
+                const playCount = parseInt(activeTrial.dataset.playCount);
+                const playBtn = activeTrial.querySelector('.play-btn');
+                const audioStatus = activeTrial.querySelector('.audio-status');
+                const playCountEl = activeTrial.querySelector('.play-count');
+                
+                playCountEl.textContent = `已播放: ${playCount}/2 次`;
+                
+                if (playCount < 2) {
+                    audioStatus.textContent = '音频播放完毕，可点击按钮再播放一次';
+                    playBtn.disabled = false;
+                } else {
+                    audioStatus.textContent = '音频已播放两次（最多播放次数）';
+                    playBtn.disabled = true;
+                }
+            }
+        }
+
+        // 验证答案
+        function validateTrialAnswers(trial) {
+            // 检查所有基本维度
+            for (let i = 0; i < config.dimensions.length; i++) {
+                const dimension = config.dimensions[i];
+                if (!trial.dataset[dimension.label]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // 保存试次数据
+        function saveTrialData(trial) {
+            const trialIndex = parseInt(trial.dataset.trialIndex);
+            const audioFilename = trial.querySelector('audio').dataset.filename;
+            const startTime = trial.dataset.startTime;
+            const endTime = new Date().toISOString();
+            
+            const startTimestamp = new Date(startTime).getTime();
+            const endTimestamp = new Date(endTime).getTime();
+            const duration = endTimestamp - startTimestamp;
+
+            // 构建数据对象
+            const trialData = {
+                participant_name: config.participantName,
+                participant_id: config.participantId,
+                trial_number: trialIndex + 1,
+                audio_filename: audioFilename,
+                start_time: startTime,
+                end_time: endTime,
+                duration_ms: duration,
+                play_count: trial.dataset.playCount || 0
+            };
+            
+            // 添加各维度评分
+            config.dimensions.forEach(dimension => {
+                trialData[dimension.label] = trial.dataset[dimension.label] || 0;
+            });
+            
+            config.experimentData.push(trialData);
+            saveToLocalStorage();
+        }
+
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            const saveData = {
+                participantName: config.participantName,
+                participantId: config.participantId,
+                currentTrial: config.currentTrial,
+                experimentData: config.experimentData,
+                lastSavedTime: new Date().toISOString(),
+                audioOrder: config.audioFiles
+            };
+            localStorage.setItem('experiment_' + config.participantId, JSON.stringify(saveData));
+        }
+
+        // 显示结束页面
+        function showFinish() {
+            document.querySelectorAll('.trial, .trial-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById('finish').classList.add('active');
+        }
+
+        // 下载CSV数据
+        function downloadCSV() {
+            // UTF-8 BOM 确保Mac Excel正确识别编码
+            const BOM = '\uFEFF';
+            
+            // 构建表头
+            const headers = [
+                '被试姓名',
+                '被试ID',
+                '试次编号',
+                '音频文件名',
+                '试次开始时间',
+                '试次提交时间',
+                '耗时(毫秒)',
+                '播放次数'
+            ];
+            
+            // 添加各维度表头
+            config.dimensions.forEach(dimension => {
+                headers.push(dimension.label);
+            });
+            
+            let csvContent = BOM + headers.join(',') + '\n';
+            
+            config.experimentData.forEach(data => {
+                const escapeChar = (value) => {
+                    if (value === null || value === undefined) return '';
+                    if (!value) return '';
+                    let escaped = value.toString().replace(/"/g, '""');
+                    escaped = escaped.replace(/\r?\n/g, '');
+                    // 对于包含逗号、空格或非ASCII字符的字段，添加引号
+                    if (escaped.includes(',') || escaped.includes(' ') || /[^\x20-\x7E]/.test(escaped)) {
+                        escaped = '"' + escaped + '"';
+                    }
+                    return escaped;
+                };
+                
+                const row = [
+                    escapeChar(data.participant_name),
+                    escapeChar(data.participant_id),
+                    data.trial_number,
+                    escapeChar(data.audio_filename),
+                    escapeChar(data.start_time),
+                    escapeChar(data.end_time),
+                    data.duration_ms,
+                    data.play_count
+                ];
+                
+                // 添加各维度数据
+                config.dimensions.forEach(dimension => {
+                    row.push(data[dimension.label] || '');
+                });
+                
+                csvContent += row.join(',') + '\n';
+            });
+            
+            // 创建并下载文件
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            
+            // 创建文件名
+            const date = new Date();
+            const dateStr = date.getFullYear() + '-' + 
+                           String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(date.getDate()).padStart(2, '0');
+            const fileName = 'sub' + config.participantId + '_' + config.participantName + '_voice_traits_' + dateStr + '.csv';
+            link.setAttribute('download', fileName);
+
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            document.getElementById('results').innerHTML = '<p>数据已成功下载！本地缓存已清除。</p>';
+            localStorage.removeItem('experiment_' + config.participantId);
+        }
+    </script>
+</body>
+</html>
